@@ -35,7 +35,7 @@
 .stat-row:last-child{border-bottom:none}
 .stat-label{color:rgba(160,200,255,0.5);font-weight:700}
 .stat-val{color:#fff;font-weight:900;font-size:13px}
-#penguin-wrap{position:relative;pointer-events:none;user-select:none}
+#pengen-wrap{position:relative;pointer-events:none;user-select:none}
 #click-canvas{position:absolute;inset:0;cursor:pointer;pointer-events:all;z-index:5}
 #main-svg{display:block;pointer-events:none;filter:drop-shadow(0 12px 32px rgba(0,60,180,0.45)) drop-shadow(0 2px 8px rgba(0,0,0,0.4))}
 .click-fx{position:absolute;pointer-events:none;font-family:'Nunito',sans-serif;font-size:15px;font-weight:900;color:#f5c842;text-shadow:0 2px 6px rgba(0,0,0,0.7);animation:floatUp .85s ease-out forwards;z-index:20}
@@ -48,17 +48,17 @@
 .count-badge{display:inline-block;background:#1d4ed8;color:#fff;font-size:10px;font-weight:900;padding:1px 6px;border-radius:8px;margin-left:4px;vertical-align:middle}
 </style>
 
-<h2 style="position:absolute;left:-9999px">Penguin clicker — arctic fishing game</h2>
+<h2 style="position:absolute;left:-9999px">pengen clicker — arctic fishing game</h2>
 <div id="game">
   <canvas id="bg-canvas"></canvas>
   <div id="ui">
     <div id="left">
-      <div id="current-label">Classic penguin</div>
-      <div id="penguin-wrap">
-        <canvas id="click-canvas" width="220" height="220" aria-label="Click the penguin to earn fish"></canvas>
+      <div id="current-label">Classic pengen</div>
+      <div id="pengen-wrap">
+        <canvas id="click-canvas" width="220" height="220" aria-label="Click the pengen to earn fish"></canvas>
         <svg id="main-svg" viewBox="0 0 200 200" width="220" height="220" xmlns="http://www.w3.org/2000/svg"></svg>
       </div>
-      <div id="cps-label">Click the penguin to earn fish!</div>
+      <div id="cps-label">Click the pengen to earn fish!</div>
     </div>
     <div id="right">
       <div class="coin-bar">
@@ -80,7 +80,7 @@
 </div>
 
 <script>
-const PENGUINS=[
+const pengenS=[
   {id:'classic',name:'Classic',cost:0,desc:'The original waddler',color:'#185FA5',belly:'#ddeeff',beak:'#EF9F27',eye:'#042C53',hat:null,scarf:null},
   {id:'chef',name:'Chef',cost:50,desc:'Wears a tall toque',color:'#2C2C2A',belly:'#fff',beak:'#EF9F27',eye:'#fff',hat:'chef',scarf:null},
   {id:'pirate',name:'Pirate',cost:150,desc:'Squawks for doubloons',color:'#3C3489',belly:'#EEEDFE',beak:'#EF9F27',eye:'#4B1528',hat:'pirate',scarf:null},
@@ -88,11 +88,11 @@ const PENGUINS=[
   {id:'ninja',name:'Ninja',cost:900,desc:'Shadow of the ice shelf',color:'#2C2C2A',belly:'#444441',beak:'#888780',eye:'#F1EFE8',hat:'ninja',scarf:'dark'},
   {id:'space',name:'Astronaut',cost:2500,desc:'One small waddle for bird',color:'#c8e0f8',belly:'#fff',beak:'#EF9F27',eye:'#185FA5',hat:'space',scarf:null},
   {id:'tuxedo',name:'Tuxedo',cost:5000,desc:'Fanciest bird alive',color:'#2C2C2A',belly:'#fff',beak:'#EF9F27',eye:'#042C53',hat:null,scarf:'bowtie'},
-  {id:'rainbow',name:'Rainbow',cost:15000,desc:'Transcends all penguin form',color:'#7F77DD',belly:'#FBEAF0',beak:'#D85A30',eye:'#26215C',hat:'crown',scarf:'rainbow'},
+  {id:'rainbow',name:'Rainbow',cost:15000,desc:'Transcends all pengen form',color:'#7F77DD',belly:'#FBEAF0',beak:'#D85A30',eye:'#26215C',hat:'crown',scarf:'rainbow'},
 ];
 const HELPERS=[
   {id:'bucket',name:'Fish Bucket',cost:10,fps:0.5,desc:'Drips fish slowly',emoji:'🪣',count:0},
-  {id:'igloo',name:'Igloo',cost:80,fps:2,desc:'Penguins work inside',emoji:'🏠',count:0},
+  {id:'igloo',name:'Igloo',cost:80,fps:2,desc:'pengens work inside',emoji:'🏠',count:0},
   {id:'boat',name:'Fishing Boat',cost:400,fps:8,desc:'Hauls fish from the sea',emoji:'⛵',count:0},
   {id:'factory',name:'Fish Factory',cost:2000,fps:30,desc:'Industrial-scale catching',emoji:'🏭',count:0},
   {id:'sub',name:'Submarine',cost:10000,fps:120,desc:'Deep-sea fish operations',emoji:'🚢',count:0},
@@ -134,7 +134,7 @@ function buildHitMask(p){
   hitCtx.restore();
 }
 
-function isOnPenguin(lx,ly){
+function isOnpengen(lx,ly){
   const d=hitCtx.getImageData(lx,ly,1,1).data;
   return d[3]>10;
 }
@@ -179,7 +179,7 @@ function drawHelpers(t){
 function getFPS(){return HELPERS.reduce((s,h)=>s+h.fps*h.count,0);}
 function fmt(n){if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1e3)return(n/1e3).toFixed(1)+'K';return Math.floor(n).toString();}
 
-function buildPenguinSVG(p,ex,ey){
+function buildpengenSVG(p,ex,ey){
   let extra='';
   if(p.hat==='chef')extra+=`<rect x="76" y="32" width="48" height="8" rx="3" fill="#fff" stroke="#ccc" stroke-width=".5"/><rect x="84" y="12" width="32" height="24" rx="4" fill="#fff" stroke="#ccc" stroke-width=".5"/>`;
   if(p.hat==='pirate')extra+=`<ellipse cx="100" cy="44" rx="38" ry="9" fill="#2C2C2A"/><rect x="72" y="24" width="56" height="22" rx="4" fill="#2C2C2A"/><rect x="88" y="26" width="24" height="12" rx="2" fill="#fff"/><text x="100" y="38" text-anchor="middle" font-size="12" fill="#2C2C2A">☠</text>`;
@@ -211,7 +211,7 @@ function buildPenguinSVG(p,ex,ey){
     <ellipse cx="118" cy="168" rx="14" ry="8" fill="${p.beak}" transform="rotate(10,118,168)"/>`;
 }
 
-function miniPenguinSVG(p,sz){
+function minipengenSVG(p,sz){
   const ew=p.color==='#2C2C2A'?'#ddd':'#fff';const ep=p.eye==='#fff'?'#2C2C2A':'#042C53';
   return `<svg viewBox="0 0 200 200" width="${sz}" height="${sz}" xmlns="http://www.w3.org/2000/svg"><ellipse cx="100" cy="112" rx="42" ry="58" fill="${p.color}"/><ellipse cx="100" cy="122" rx="28" ry="38" fill="${p.belly}"/><ellipse cx="82" cy="80" rx="10" ry="12" fill="${ew}"/><ellipse cx="118" cy="80" rx="10" ry="12" fill="${ew}"/><circle cx="84" cy="80" r="5" fill="${ep}"/><circle cx="120" cy="80" r="5" fill="${ep}"/><circle cx="85" cy="78" r="2" fill="${ew}"/><circle cx="121" cy="78" r="2" fill="${ew}"/><ellipse cx="100" cy="96" rx="12" ry="8" fill="${p.beak}"/><ellipse cx="62" cy="130" rx="11" ry="20" fill="${p.color}" transform="rotate(-15,62,130)"/><ellipse cx="138" cy="130" rx="11" ry="20" fill="${p.color}" transform="rotate(15,138,130)"/><ellipse cx="82" cy="166" rx="13" ry="7" fill="${p.beak}" transform="rotate(-10,82,166)"/><ellipse cx="118" cy="166" rx="13" ry="7" fill="${p.beak}" transform="rotate(10,118,166)"/></svg>`;
 }
@@ -224,15 +224,15 @@ function updateFishDisplay(){
 function renderPanel(){
   const panel=document.getElementById('panel');
   if(state.activeTab==='shop'){
-    let h=`<div class="section-label">Penguin collection</div>`;
-    PENGUINS.forEach(pg=>{
+    let h=`<div class="section-label">pengen collection</div>`;
+    pengenS.forEach(pg=>{
       const owned=state.owned[pg.id],afford=state.fish>=pg.cost,equipped=state.equippedId===pg.id,locked=!owned&&!afford;
-      h+=`<div class="shop-item${owned?' owned':''}${locked?' locked':''}" onclick="${owned?`equipPenguin('${pg.id}')`:`buyPenguin('${pg.id}')`}">
-        <div class="item-svg">${miniPenguinSVG(pg,46)}</div>
+      h+=`<div class="shop-item${owned?' owned':''}${locked?' locked':''}" onclick="${owned?`equippengen('${pg.id}')`:`buypengen('${pg.id}')`}">
+        <div class="item-svg">${minipengenSVG(pg,46)}</div>
         <div style="flex:1;min-width:0">
           <div class="item-name">${pg.name}</div>
           <div class="item-desc">${pg.desc}</div>
-          ${owned?`<div class="item-owned-badge">✓ Owned</div><button class="equip-btn${equipped?' active':''}" onclick="event.stopPropagation();equipPenguin('${pg.id}')">${equipped?'Equipped':'Equip'}</button>`:`<div class="item-cost">🐟 ${fmt(pg.cost)}</div>`}
+          ${owned?`<div class="item-owned-badge">✓ Owned</div><button class="equip-btn${equipped?' active':''}" onclick="event.stopPropagation();equippengen('${pg.id}')">${equipped?'Equipped':'Equip'}</button>`:`<div class="item-cost">🐟 ${fmt(pg.cost)}</div>`}
         </div></div>`;
     });
     panel.innerHTML=h;
@@ -255,15 +255,15 @@ function renderPanel(){
       <div class="stat-row"><span class="stat-label">Fish collected</span><span class="stat-val">${fmt(state.totalFish)}</span></div>
       <div class="stat-row"><span class="stat-label">Times clicked</span><span class="stat-val">${state.totalClicks}</span></div>
       <div class="stat-row"><span class="stat-label">Fish / second</span><span class="stat-val">${fps.toFixed(1)}</span></div>
-      <div class="stat-row"><span class="stat-label">Penguins owned</span><span class="stat-val">${Object.keys(state.owned).length}/${PENGUINS.length}</span></div>
+      <div class="stat-row"><span class="stat-label">pengens owned</span><span class="stat-val">${Object.keys(state.owned).length}/${pengenS.length}</span></div>
       <div class="stat-row"><span class="stat-label">Total helpers</span><span class="stat-val">${HELPERS.reduce((s,h)=>s+h.count,0)}</span></div>
       <div class="section-label" style="margin-top:14px">Your flock</div>
-      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">${PENGUINS.filter(pg=>state.owned[pg.id]).map(pg=>`<div title="${pg.name}" style="opacity:${state.equippedId===pg.id?1:0.5}">${miniPenguinSVG(pg,36)}</div>`).join('')}</div>`;
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">${pengenS.filter(pg=>state.owned[pg.id]).map(pg=>`<div title="${pg.name}" style="opacity:${state.equippedId===pg.id?1:0.5}">${minipengenSVG(pg,36)}</div>`).join('')}</div>`;
   }
   const fp=getFPS();
-  document.getElementById('cps-label').textContent=fp>0?`+${fp.toFixed(1)} fish/sec from helpers`:'Click the penguin to earn fish!';
-  const cur=PENGUINS.find(x=>x.id===state.equippedId);
-  document.getElementById('current-label').textContent=cur.name+' penguin';
+  document.getElementById('cps-label').textContent=fp>0?`+${fp.toFixed(1)} fish/sec from helpers`:'Click the pengen to earn fish!';
+  const cur=pengenS.find(x=>x.id===state.equippedId);
+  document.getElementById('current-label').textContent=cur.name+' pengen';
 }
 
 function switchTab(t){
@@ -271,13 +271,13 @@ function switchTab(t){
   document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('active',['shop','helpers','stats'][i]===t));
   renderPanel();
 }
-function buyPenguin(id){
-  const p=PENGUINS.find(x=>x.id===id);
+function buypengen(id){
+  const p=pengenS.find(x=>x.id===id);
   if(state.owned[id]||state.fish<p.cost)return;
   state.fish-=p.cost;state.owned[id]=true;state.equippedId=id;
   updateFishDisplay();renderPanel();
 }
-function equipPenguin(id){state.equippedId=id;renderPanel();}
+function equippengen(id){state.equippedId=id;renderPanel();}
 function buyHelper(id){
   const h=HELPERS.find(x=>x.id===id);
   if(state.fish<h.cost)return;
@@ -285,14 +285,14 @@ function buyHelper(id){
   updateFishDisplay();renderPanel();
 }
 
-const wrap=document.getElementById('penguin-wrap');
+const wrap=document.getElementById('pengen-wrap');
 const mainSvg=document.getElementById('main-svg');
 
 clickCanvas.addEventListener('click',function(e){
   const r=clickCanvas.getBoundingClientRect();
   const lx=Math.round((e.clientX-r.left)*(clickCanvas.width/r.width));
   const ly=Math.round((e.clientY-r.top)*(clickCanvas.height/r.height));
-  if(!isOnPenguin(lx,ly))return;
+  if(!isOnpengen(lx,ly))return;
 
   state.fish+=1;state.totalFish+=1;state.totalClicks++;
   updateFishDisplay();
@@ -310,7 +310,7 @@ clickCanvas.addEventListener('mousemove',function(e){
   const r=clickCanvas.getBoundingClientRect();
   const lx=Math.round((e.clientX-r.left)*(clickCanvas.width/r.width));
   const ly=Math.round((e.clientY-r.top)*(clickCanvas.height/r.height));
-  clickCanvas.style.cursor=isOnPenguin(lx,ly)?'pointer':'default';
+  clickCanvas.style.cursor=isOnpengen(lx,ly)?'pointer':'default';
   mouseX=e.clientX;mouseY=e.clientY;
 });
 
@@ -329,10 +329,10 @@ function getEyeOffset(){
 
 let lastP=null;
 function loop(t){
-  const p=PENGUINS.find(x=>x.id===state.equippedId);
+  const p=pengenS.find(x=>x.id===state.equippedId);
   if(p!==lastP){buildHitMask(p);lastP=p;}
   const{x,y}=getEyeOffset();
-  mainSvg.innerHTML=buildPenguinSVG(p,x,y);
+  mainSvg.innerHTML=buildpengenSVG(p,x,y);
   drawBg(t);
   requestAnimationFrame(loop);
 }
