@@ -1,0 +1,346 @@
+
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+#game{font-family:'Nunito',sans-serif;position:relative;border-radius:20px;overflow:hidden;border:2px solid #2a6aad;height:600px;display:flex;flex-direction:column}
+#bg-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+#ui{position:relative;z-index:2;display:flex;height:600px}
+#left{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem;pointer-events:none}
+#right{width:268px;display:flex;flex-direction:column;background:rgba(4,18,44,0.88);border-left:1.5px solid rgba(100,160,255,0.18);pointer-events:all}
+.coin-bar{display:flex;align-items:center;gap:10px;padding:13px 16px;background:rgba(0,10,30,0.6);border-bottom:1px solid rgba(100,160,255,0.15)}
+.fish-orb{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#f5c842,#e87d0d);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+#fishCount{font-size:19px;font-weight:900;color:#fff;letter-spacing:-.5px;line-height:1.1}
+#fishTotal{font-size:10px;color:rgba(150,195,255,0.55);margin-top:1px;font-weight:600;letter-spacing:.04em}
+#tabs{display:flex;background:rgba(0,8,24,0.5)}
+.tab{flex:1;padding:9px 4px;font-family:'Nunito',sans-serif;font-size:11px;font-weight:800;text-align:center;cursor:pointer;color:rgba(140,190,255,0.45);border:none;background:none;letter-spacing:.06em;text-transform:uppercase;transition:color .15s,background .15s;border-bottom:2px solid transparent}
+.tab.active{color:#fff;background:rgba(40,110,220,0.22);border-bottom:2px solid #5599ee}
+#panel{flex:1;overflow-y:auto;padding:10px;scrollbar-width:thin;scrollbar-color:rgba(80,140,255,0.25) transparent}
+#panel::-webkit-scrollbar{width:3px}
+#panel::-webkit-scrollbar-thumb{background:rgba(80,140,255,0.3);border-radius:2px}
+.section-label{font-size:9px;font-weight:900;color:rgba(120,175,255,0.4);letter-spacing:.14em;margin:10px 0 7px;text-transform:uppercase}
+.shop-item{background:rgba(255,255,255,0.045);border:1px solid rgba(100,160,255,0.12);border-radius:14px;padding:9px 11px;margin-bottom:7px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:all .15s;position:relative;overflow:hidden}
+.shop-item::before{content:'';position:absolute;inset:0;opacity:0;background:rgba(60,130,255,0.12);transition:opacity .15s}
+.shop-item:hover:not(.locked)::before{opacity:1}
+.shop-item:hover:not(.locked){border-color:rgba(100,160,255,0.35)}
+.shop-item.locked{opacity:.35;cursor:not-allowed}
+.shop-item.owned{border-color:rgba(30,158,120,0.5);background:rgba(20,100,75,0.15)}
+.item-svg{flex-shrink:0;width:46px;height:46px}
+.item-name{font-size:13px;font-weight:800;color:#fff;line-height:1.2}
+.item-desc{font-size:10px;color:rgba(160,200,255,0.55);margin-top:2px;font-weight:600}
+.item-cost{font-size:12px;font-weight:800;color:#f5c842;margin-top:4px}
+.item-owned-badge{font-size:10px;color:#5DCAA5;font-weight:800;margin-top:3px}
+.equip-btn{margin-top:5px;padding:3px 10px;font-family:'Nunito',sans-serif;font-size:10px;font-weight:800;border:1px solid rgba(100,160,255,0.35);border-radius:8px;cursor:pointer;background:rgba(40,100,220,0.2);color:#93c5fd;transition:all .12s;letter-spacing:.04em;text-transform:uppercase}
+.equip-btn.active{background:#1d4ed8;color:#fff;border-color:#3b82f6}
+.stat-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:6px 0;border-bottom:1px solid rgba(100,160,255,0.08)}
+.stat-row:last-child{border-bottom:none}
+.stat-label{color:rgba(160,200,255,0.5);font-weight:700}
+.stat-val{color:#fff;font-weight:900;font-size:13px}
+#penguin-wrap{position:relative;pointer-events:none;user-select:none}
+#click-canvas{position:absolute;inset:0;cursor:pointer;pointer-events:all;z-index:5}
+#main-svg{display:block;pointer-events:none;filter:drop-shadow(0 12px 32px rgba(0,60,180,0.45)) drop-shadow(0 2px 8px rgba(0,0,0,0.4))}
+.click-fx{position:absolute;pointer-events:none;font-family:'Nunito',sans-serif;font-size:15px;font-weight:900;color:#f5c842;text-shadow:0 2px 6px rgba(0,0,0,0.7);animation:floatUp .85s ease-out forwards;z-index:20}
+@keyframes floatUp{0%{opacity:1;transform:translateY(0) scale(1.15)}100%{opacity:0;transform:translateY(-75px) scale(0.85)}}
+#current-label{font-size:12px;font-weight:800;color:rgba(180,220,255,0.7);margin-bottom:12px;letter-spacing:.06em;text-transform:uppercase;text-shadow:0 1px 4px rgba(0,0,0,0.5)}
+#cps-label{font-size:11px;font-weight:700;color:rgba(140,195,255,0.55);margin-top:12px;text-shadow:0 1px 3px rgba(0,0,0,0.5)}
+.bounce{animation:boing .15s ease}
+@keyframes boing{0%{transform:scale(1)}45%{transform:scale(0.88)}100%{transform:scale(1)}}
+.helper-icon-emoji{font-size:24px;width:46px;height:46px;display:flex;align-items:center;justify-content:center;border-radius:10px;background:rgba(255,255,255,0.07);flex-shrink:0}
+.count-badge{display:inline-block;background:#1d4ed8;color:#fff;font-size:10px;font-weight:900;padding:1px 6px;border-radius:8px;margin-left:4px;vertical-align:middle}
+</style>
+
+<h2 style="position:absolute;left:-9999px">Penguin clicker — arctic fishing game</h2>
+<div id="game">
+  <canvas id="bg-canvas"></canvas>
+  <div id="ui">
+    <div id="left">
+      <div id="current-label">Classic penguin</div>
+      <div id="penguin-wrap">
+        <canvas id="click-canvas" width="220" height="220" aria-label="Click the penguin to earn fish"></canvas>
+        <svg id="main-svg" viewBox="0 0 200 200" width="220" height="220" xmlns="http://www.w3.org/2000/svg"></svg>
+      </div>
+      <div id="cps-label">Click the penguin to earn fish!</div>
+    </div>
+    <div id="right">
+      <div class="coin-bar">
+        <div class="fish-orb">🐟</div>
+        <div style="flex:1">
+          <div id="fishCount">0 fish</div>
+          <div id="fishTotal">Total earned: 0</div>
+        </div>
+      </div>
+      <div id="tabs">
+        <button class="tab active" onclick="switchTab('shop')">Shop</button>
+        <button class="tab" onclick="switchTab('helpers')">Helpers</button>
+        <button class="tab" onclick="switchTab('stats')">Stats</button>
+      </div>
+      <div id="panel"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const PENGUINS=[
+  {id:'classic',name:'Classic',cost:0,desc:'The original waddler',color:'#185FA5',belly:'#ddeeff',beak:'#EF9F27',eye:'#042C53',hat:null,scarf:null},
+  {id:'chef',name:'Chef',cost:50,desc:'Wears a tall toque',color:'#2C2C2A',belly:'#fff',beak:'#EF9F27',eye:'#fff',hat:'chef',scarf:null},
+  {id:'pirate',name:'Pirate',cost:150,desc:'Squawks for doubloons',color:'#3C3489',belly:'#EEEDFE',beak:'#EF9F27',eye:'#4B1528',hat:'pirate',scarf:null},
+  {id:'santa',name:'Santa',cost:400,desc:'Ho ho ho waddlebird',color:'#A32D2D',belly:'#fff',beak:'#F0997B',eye:'#501313',hat:'santa',scarf:'red'},
+  {id:'ninja',name:'Ninja',cost:900,desc:'Shadow of the ice shelf',color:'#2C2C2A',belly:'#444441',beak:'#888780',eye:'#F1EFE8',hat:'ninja',scarf:'dark'},
+  {id:'space',name:'Astronaut',cost:2500,desc:'One small waddle for bird',color:'#c8e0f8',belly:'#fff',beak:'#EF9F27',eye:'#185FA5',hat:'space',scarf:null},
+  {id:'tuxedo',name:'Tuxedo',cost:5000,desc:'Fanciest bird alive',color:'#2C2C2A',belly:'#fff',beak:'#EF9F27',eye:'#042C53',hat:null,scarf:'bowtie'},
+  {id:'rainbow',name:'Rainbow',cost:15000,desc:'Transcends all penguin form',color:'#7F77DD',belly:'#FBEAF0',beak:'#D85A30',eye:'#26215C',hat:'crown',scarf:'rainbow'},
+];
+const HELPERS=[
+  {id:'bucket',name:'Fish Bucket',cost:10,fps:0.5,desc:'Drips fish slowly',emoji:'🪣',count:0},
+  {id:'igloo',name:'Igloo',cost:80,fps:2,desc:'Penguins work inside',emoji:'🏠',count:0},
+  {id:'boat',name:'Fishing Boat',cost:400,fps:8,desc:'Hauls fish from the sea',emoji:'⛵',count:0},
+  {id:'factory',name:'Fish Factory',cost:2000,fps:30,desc:'Industrial-scale catching',emoji:'🏭',count:0},
+  {id:'sub',name:'Submarine',cost:10000,fps:120,desc:'Deep-sea fish operations',emoji:'🚢',count:0},
+];
+
+let state={fish:0,totalFish:0,equippedId:'classic',owned:{classic:true},activeTab:'shop',totalClicks:0};
+let mouseX=300,mouseY=300;
+
+const bgCanvas=document.getElementById('bg-canvas');
+const bgCtx=bgCanvas.getContext('2d');
+let W=680,H=600;
+
+const clickCanvas=document.getElementById('click-canvas');
+const hitCtx=clickCanvas.getContext('2d');
+
+function resizeBg(){
+  const r=document.getElementById('game').getBoundingClientRect();
+  W=bgCanvas.width=r.width||680;H=bgCanvas.height=r.height||600;
+}
+
+function buildHitMask(p){
+  hitCtx.clearRect(0,0,220,220);
+  const scale=220/200;
+  hitCtx.save();
+  hitCtx.scale(scale,scale);
+  hitCtx.fillStyle='#000';
+  hitCtx.beginPath();hitCtx.ellipse(100,112,42,58,0,0,Math.PI*2);hitCtx.fill();
+  hitCtx.beginPath();hitCtx.ellipse(62,130,12,22,(-15*Math.PI)/180,0,Math.PI*2);hitCtx.fill();
+  hitCtx.beginPath();hitCtx.ellipse(138,130,12,22,(15*Math.PI)/180,0,Math.PI*2);hitCtx.fill();
+  hitCtx.beginPath();hitCtx.ellipse(82,168,14,8,(-10*Math.PI)/180,0,Math.PI*2);hitCtx.fill();
+  hitCtx.beginPath();hitCtx.ellipse(118,168,14,8,(10*Math.PI)/180,0,Math.PI*2);hitCtx.fill();
+  hitCtx.beginPath();hitCtx.ellipse(100,96,13,9,0,0,Math.PI*2);hitCtx.fill();
+  if(p.hat==='chef'||p.hat==='santa'||p.hat==='crown'||p.hat==='pirate'){
+    hitCtx.beginPath();hitCtx.rect(66,10,68,50);hitCtx.fill();
+  }
+  if(p.hat==='space'){
+    hitCtx.beginPath();hitCtx.ellipse(100,72,52,54,0,0,Math.PI*2);hitCtx.fill();
+  }
+  hitCtx.restore();
+}
+
+function isOnPenguin(lx,ly){
+  const d=hitCtx.getImageData(lx,ly,1,1).data;
+  return d[3]>10;
+}
+
+const snowflakes=Array.from({length:38},(_,i)=>({x:Math.random()*680,y:Math.random()*600,r:Math.random()*2+0.5,s:Math.random()*0.4+0.2,d:Math.random()*0.8+0.3}));
+
+function drawBg(t){
+  bgCtx.clearRect(0,0,W,H);
+  const sky=bgCtx.createLinearGradient(0,0,0,H*0.65);
+  sky.addColorStop(0,'#040d1f');sky.addColorStop(0.5,'#071a3e');sky.addColorStop(1,'#0d2a5a');
+  bgCtx.fillStyle=sky;bgCtx.fillRect(0,0,W,H);
+  const aurora=bgCtx.createLinearGradient(0,0,W,0);
+  aurora.addColorStop(0,'rgba(0,200,120,0)');aurora.addColorStop(0.3,'rgba(0,200,120,0.07)');
+  aurora.addColorStop(0.6,'rgba(80,100,255,0.07)');aurora.addColorStop(1,'rgba(80,100,255,0)');
+  bgCtx.fillStyle=aurora;bgCtx.fillRect(0,H*0.05,W,H*0.3);
+  const stars=[[50,28],[130,12],[210,44],[295,18],[375,38],[455,8],[535,30],[618,48],[665,16],[88,66],[248,74],[470,58],[592,70],[22,82],[340,60]];
+  stars.forEach(([sx,sy],i)=>{const tw=t*0.0004+i;const op=0.55+0.35*Math.sin(tw);bgCtx.fillStyle=`rgba(255,255,255,${op})`;bgCtx.beginPath();bgCtx.arc(sx,sy,0.9+0.4*Math.sin(tw*1.3),0,Math.PI*2);bgCtx.fill();});
+  snowflakes.forEach(sf=>{sf.y+=sf.s;sf.x+=Math.sin(t*0.001+sf.d)*0.3;if(sf.y>H){sf.y=-4;sf.x=Math.random()*W;}bgCtx.fillStyle='rgba(220,235,255,0.7)';bgCtx.beginPath();bgCtx.arc(sf.x,sf.y,sf.r,0,Math.PI*2);bgCtx.fill();});
+  const water=bgCtx.createLinearGradient(0,H*0.58,0,H*0.75);
+  water.addColorStop(0,'#0a2050');water.addColorStop(1,'#071535');
+  bgCtx.fillStyle=water;bgCtx.fillRect(0,H*0.58,W,H*0.17);
+  for(let w=0;w<6;w++){const wy=H*0.6+w*18+Math.sin(t*0.002+w)*3;bgCtx.strokeStyle=`rgba(80,140,220,${0.12+w*0.02})`;bgCtx.lineWidth=1;bgCtx.beginPath();bgCtx.moveTo(0,wy);for(let x=0;x<W;x+=40){bgCtx.quadraticCurveTo(x+20,wy+Math.sin(t*0.0015+x*0.05+w)*4,x+40,wy);}bgCtx.stroke();}
+  const ice1=bgCtx.createLinearGradient(0,H*0.73,0,H);ice1.addColorStop(0,'#c8dff0');ice1.addColorStop(1,'#e8f6ff');
+  bgCtx.fillStyle=ice1;bgCtx.beginPath();bgCtx.moveTo(0,H*0.79);bgCtx.bezierCurveTo(W*0.18,H*0.72,W*0.38,H*0.82,W*0.58,H*0.75);bgCtx.bezierCurveTo(W*0.78,H*0.68,W,H*0.78,W,H*0.78);bgCtx.lineTo(W,H);bgCtx.lineTo(0,H);bgCtx.closePath();bgCtx.fill();
+  const ice2=bgCtx.createLinearGradient(0,H*0.82,0,H);ice2.addColorStop(0,'#e8f5ff');ice2.addColorStop(1,'#f5fbff');
+  bgCtx.fillStyle=ice2;bgCtx.beginPath();bgCtx.moveTo(0,H*0.86);bgCtx.bezierCurveTo(W*0.22,H*0.82,W*0.48,H*0.89,W*0.72,H*0.84);bgCtx.bezierCurveTo(W*0.88,H*0.81,W,H*0.87,W,H*0.87);bgCtx.lineTo(W,H);bgCtx.lineTo(0,H);bgCtx.closePath();bgCtx.fill();
+  bgCtx.fillStyle='#f0f9ff';bgCtx.beginPath();bgCtx.moveTo(0,H*0.92);bgCtx.bezierCurveTo(W*0.3,H*0.89,W*0.6,H*0.93,W,H*0.91);bgCtx.lineTo(W,H);bgCtx.lineTo(0,H);bgCtx.closePath();bgCtx.fill();
+  bgCtx.fillStyle='rgba(180,215,240,0.6)';[[W*0.06,0.9],[W*0.17,1.1],[W*0.3,0.85],[W*0.78,0.95],[W*0.88,1.05]].forEach(([bx,sc])=>{bgCtx.beginPath();bgCtx.ellipse(bx,H*0.77,38*sc,14*sc,0,0,Math.PI*2);bgCtx.fill();});
+  drawHelpers(t);
+}
+
+function drawHelpers(t){
+  const bc=Math.min(HELPERS[0].count,6),ic=Math.min(HELPERS[1].count,4),bo=Math.min(HELPERS[2].count,4),fa=Math.min(HELPERS[3].count,3),su=Math.min(HELPERS[4].count,3);
+  const gy=H*0.88;
+  for(let i=0;i<bc;i++){const x=18+i*26,y=gy-30;bgCtx.fillStyle='#c87a10';bgCtx.beginPath();bgCtx.moveTo(x+2,y+6);bgCtx.lineTo(x+18,y+6);bgCtx.lineTo(x+20,y+24);bgCtx.lineTo(x,y+24);bgCtx.closePath();bgCtx.fill();bgCtx.fillStyle='#1a5fa0';bgCtx.beginPath();bgCtx.moveTo(x+3,y+8);bgCtx.lineTo(x+17,y+8);bgCtx.lineTo(x+19,y+22);bgCtx.lineTo(x+1,y+22);bgCtx.closePath();bgCtx.fill();bgCtx.strokeStyle='#c87a10';bgCtx.lineWidth=2;bgCtx.lineCap='round';bgCtx.beginPath();bgCtx.moveTo(x+2,y+6);bgCtx.quadraticCurveTo(x+10,y-2,x+18,y+6);bgCtx.stroke();}
+  for(let i=0;i<ic;i++){const x=W*0.13+i*58,y=gy;bgCtx.fillStyle='#c0ddf0';bgCtx.beginPath();bgCtx.arc(x,y,26,Math.PI,0);bgCtx.fill();bgCtx.fillStyle='#a8ccde';bgCtx.fillRect(x-26,y-3,52,5);bgCtx.fillStyle='rgba(0,20,80,0.35)';bgCtx.beginPath();bgCtx.arc(x,y,11,Math.PI,0);bgCtx.fill();bgCtx.strokeStyle='rgba(80,140,200,0.35)';bgCtx.lineWidth=1;for(let row=0;row<3;row++){for(let col=0;col<4-row;col++){bgCtx.beginPath();bgCtx.moveTo(x-20+col*13+row*6.5,y-7-row*9);bgCtx.lineTo(x-9+col*13+row*6.5,y-7-row*9);bgCtx.stroke();}}}
+  for(let i=0;i<bo;i++){const bx=W*0.22+i*95,by=H*0.66+Math.sin(t*0.0018+i*1.4)*5;bgCtx.fillStyle='#c0392b';bgCtx.beginPath();bgCtx.moveTo(bx-24,by+6);bgCtx.lineTo(bx+24,by+6);bgCtx.lineTo(bx+17,by+18);bgCtx.lineTo(bx-17,by+18);bgCtx.closePath();bgCtx.fill();bgCtx.fillStyle='#e8e8e0';bgCtx.fillRect(bx-10,by-4,20,10);bgCtx.fillStyle='#fff';bgCtx.fillRect(bx-1.5,by-18,3,22);bgCtx.fillStyle='rgba(255,255,255,0.9)';bgCtx.beginPath();bgCtx.moveTo(bx,by-18);bgCtx.lineTo(bx+20,by-6);bgCtx.lineTo(bx,by+2);bgCtx.closePath();bgCtx.fill();bgCtx.strokeStyle='rgba(100,160,220,0.4)';bgCtx.lineWidth=1.5;for(let ww=0;ww<3;ww++){bgCtx.beginPath();bgCtx.arc(bx-38+ww*20,by+10,6+ww*2,0.2,-0.2,true);bgCtx.stroke();}}
+  for(let i=0;i<fa;i++){const x=W*0.58+i*88,y=gy;bgCtx.fillStyle='#3a3a38';bgCtx.fillRect(x-22,y-55,44,57);bgCtx.fillStyle='#555553';bgCtx.fillRect(x-8,y-55,18,10);bgCtx.fillStyle='#4a4a48';bgCtx.fillRect(x-18,y-62,15,10);bgCtx.fillRect(x+2,y-68,14,16);bgCtx.fillStyle='#D85A30';bgCtx.fillRect(x-12,y-40,24,8);bgCtx.fillStyle='rgba(180,180,180,0.25)';bgCtx.beginPath();bgCtx.ellipse(x-10,y-64,4,9,0,0,Math.PI*2);bgCtx.fill();bgCtx.beginPath();bgCtx.ellipse(x+9,y-70,3.5,8,0,0,Math.PI*2);bgCtx.fill();bgCtx.fillStyle='rgba(240,100,60,0.15)';bgCtx.beginPath();bgCtx.ellipse(x-10,y-74,6,6,0,0,Math.PI*2);bgCtx.fill();bgCtx.beginPath();bgCtx.ellipse(x+9,y-79,5,5,0,0,Math.PI*2);bgCtx.fill();for(let w=0;w<3;w++){bgCtx.fillStyle='rgba(255,200,80,0.45)';bgCtx.fillRect(x-14+w*13,y-30,8,10);}}
+  for(let i=0;i<su;i++){const sx=W*0.08+i*180+Math.sin(t*0.001+i*1.8)*18,sy=H*0.715+i*6;bgCtx.fillStyle='#2d2580';bgCtx.beginPath();bgCtx.ellipse(sx,sy,42,15,0,0,Math.PI*2);bgCtx.fill();bgCtx.fillStyle='#3c3490';bgCtx.fillRect(sx-8,sy-26,16,13);bgCtx.fillRect(sx-12,sy-29,24,5);bgCtx.fillStyle='rgba(100,180,255,0.55)';bgCtx.beginPath();bgCtx.arc(sx+12,sy-4,6,0,Math.PI*2);bgCtx.fill();bgCtx.fillStyle='rgba(180,220,255,0.4)';bgCtx.beginPath();bgCtx.arc(sx+12,sy-4,2.5,0,Math.PI*2);bgCtx.fill();bgCtx.strokeStyle='rgba(120,200,255,0.35)';bgCtx.lineWidth=2;bgCtx.lineCap='round';for(let w=1;w<=3;w++){bgCtx.beginPath();bgCtx.arc(sx-48-w*8,sy,w*5,0.35,-0.35,true);bgCtx.stroke();}}
+}
+
+function getFPS(){return HELPERS.reduce((s,h)=>s+h.fps*h.count,0);}
+function fmt(n){if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1e3)return(n/1e3).toFixed(1)+'K';return Math.floor(n).toString();}
+
+function buildPenguinSVG(p,ex,ey){
+  let extra='';
+  if(p.hat==='chef')extra+=`<rect x="76" y="32" width="48" height="8" rx="3" fill="#fff" stroke="#ccc" stroke-width=".5"/><rect x="84" y="12" width="32" height="24" rx="4" fill="#fff" stroke="#ccc" stroke-width=".5"/>`;
+  if(p.hat==='pirate')extra+=`<ellipse cx="100" cy="44" rx="38" ry="9" fill="#2C2C2A"/><rect x="72" y="24" width="56" height="22" rx="4" fill="#2C2C2A"/><rect x="88" y="26" width="24" height="12" rx="2" fill="#fff"/><text x="100" y="38" text-anchor="middle" font-size="12" fill="#2C2C2A">☠</text>`;
+  if(p.hat==='santa')extra+=`<ellipse cx="100" cy="55" rx="38" ry="8" fill="#fff"/><polygon points="100,15 70,55 130,55" fill="#A32D2D"/><circle cx="100" cy="15" r="6" fill="#fff"/>`;
+  if(p.hat==='ninja')extra+=`<rect x="62" y="38" width="76" height="38" rx="4" fill="#2C2C2A"/><rect x="62" y="68" width="76" height="12" rx="2" fill="#888780"/>`;
+  if(p.hat==='space')extra+=`<ellipse cx="100" cy="72" rx="52" ry="54" fill="none" stroke="#B5D4F4" stroke-width="8"/><rect x="56" y="44" width="88" height="58" rx="28" fill="rgba(200,230,255,0.3)" stroke="#B5D4F4" stroke-width="3"/>`;
+  if(p.hat==='crown')extra+=`<polygon points="74,54 82,34 92,50 100,28 108,50 118,34 126,54" fill="#EF9F27" stroke="#BA7517" stroke-width="1"/><rect x="74" y="52" width="52" height="10" rx="3" fill="#EF9F27"/>`;
+  if(p.scarf==='red')extra+=`<rect x="68" y="102" width="64" height="14" rx="4" fill="#A32D2D"/><rect x="86" y="112" width="16" height="28" rx="4" fill="#A32D2D"/>`;
+  if(p.scarf==='dark')extra+=`<rect x="68" y="102" width="64" height="14" rx="4" fill="#444441"/>`;
+  if(p.scarf==='bowtie')extra+=`<polygon points="82,109 100,116 82,124" fill="#2C2C2A"/><polygon points="118,109 100,116 118,124" fill="#2C2C2A"/><circle cx="100" cy="116" r="5" fill="#D4537E"/>`;
+  if(p.scarf==='rainbow')extra+=`<rect x="68" y="102" width="64" height="6" rx="2" fill="#D85A30"/><rect x="68" y="108" width="64" height="5" rx="2" fill="#EF9F27"/><rect x="68" y="113" width="64" height="5" rx="2" fill="#639922"/><rect x="68" y="118" width="64" height="5" rx="2" fill="#7F77DD"/>`;
+  const ew=p.color==='#2C2C2A'?'#ddd':'#fff';
+  const ep=p.eye==='#fff'?'#2C2C2A':'#042C53';
+  return `<ellipse cx="100" cy="176" rx="44" ry="10" fill="rgba(0,0,0,0.18)"/>
+    <ellipse cx="100" cy="112" rx="42" ry="58" fill="${p.color}"/>
+    <ellipse cx="100" cy="122" rx="28" ry="38" fill="${p.belly}"/>
+    ${extra}
+    <ellipse cx="82" cy="80" rx="11" ry="13" fill="${ew}"/>
+    <ellipse cx="118" cy="80" rx="11" ry="13" fill="${ew}"/>
+    <circle cx="${82+ex}" cy="${80+ey}" r="6.5" fill="${ep}"/>
+    <circle cx="${118+ex}" cy="${80+ey}" r="6.5" fill="${ep}"/>
+    <circle cx="${83.5+ex}" cy="${78.5+ey}" r="2.5" fill="${ew}"/>
+    <circle cx="${119.5+ex}" cy="${78.5+ey}" r="2.5" fill="${ew}"/>
+    <ellipse cx="100" cy="96" rx="13" ry="9" fill="${p.beak}"/>
+    <ellipse cx="100" cy="93" rx="13" ry="4.5" fill="${p.beak}" opacity=".6"/>
+    <ellipse cx="62" cy="130" rx="12" ry="22" fill="${p.color}" transform="rotate(-15,62,130)"/>
+    <ellipse cx="138" cy="130" rx="12" ry="22" fill="${p.color}" transform="rotate(15,138,130)"/>
+    <ellipse cx="82" cy="168" rx="14" ry="8" fill="${p.beak}" transform="rotate(-10,82,168)"/>
+    <ellipse cx="118" cy="168" rx="14" ry="8" fill="${p.beak}" transform="rotate(10,118,168)"/>`;
+}
+
+function miniPenguinSVG(p,sz){
+  const ew=p.color==='#2C2C2A'?'#ddd':'#fff';const ep=p.eye==='#fff'?'#2C2C2A':'#042C53';
+  return `<svg viewBox="0 0 200 200" width="${sz}" height="${sz}" xmlns="http://www.w3.org/2000/svg"><ellipse cx="100" cy="112" rx="42" ry="58" fill="${p.color}"/><ellipse cx="100" cy="122" rx="28" ry="38" fill="${p.belly}"/><ellipse cx="82" cy="80" rx="10" ry="12" fill="${ew}"/><ellipse cx="118" cy="80" rx="10" ry="12" fill="${ew}"/><circle cx="84" cy="80" r="5" fill="${ep}"/><circle cx="120" cy="80" r="5" fill="${ep}"/><circle cx="85" cy="78" r="2" fill="${ew}"/><circle cx="121" cy="78" r="2" fill="${ew}"/><ellipse cx="100" cy="96" rx="12" ry="8" fill="${p.beak}"/><ellipse cx="62" cy="130" rx="11" ry="20" fill="${p.color}" transform="rotate(-15,62,130)"/><ellipse cx="138" cy="130" rx="11" ry="20" fill="${p.color}" transform="rotate(15,138,130)"/><ellipse cx="82" cy="166" rx="13" ry="7" fill="${p.beak}" transform="rotate(-10,82,166)"/><ellipse cx="118" cy="166" rx="13" ry="7" fill="${p.beak}" transform="rotate(10,118,166)"/></svg>`;
+}
+
+function updateFishDisplay(){
+  document.getElementById('fishCount').textContent=fmt(state.fish)+' fish';
+  document.getElementById('fishTotal').textContent='Total earned: '+fmt(state.totalFish);
+}
+
+function renderPanel(){
+  const panel=document.getElementById('panel');
+  if(state.activeTab==='shop'){
+    let h=`<div class="section-label">Penguin collection</div>`;
+    PENGUINS.forEach(pg=>{
+      const owned=state.owned[pg.id],afford=state.fish>=pg.cost,equipped=state.equippedId===pg.id,locked=!owned&&!afford;
+      h+=`<div class="shop-item${owned?' owned':''}${locked?' locked':''}" onclick="${owned?`equipPenguin('${pg.id}')`:`buyPenguin('${pg.id}')`}">
+        <div class="item-svg">${miniPenguinSVG(pg,46)}</div>
+        <div style="flex:1;min-width:0">
+          <div class="item-name">${pg.name}</div>
+          <div class="item-desc">${pg.desc}</div>
+          ${owned?`<div class="item-owned-badge">✓ Owned</div><button class="equip-btn${equipped?' active':''}" onclick="event.stopPropagation();equipPenguin('${pg.id}')">${equipped?'Equipped':'Equip'}</button>`:`<div class="item-cost">🐟 ${fmt(pg.cost)}</div>`}
+        </div></div>`;
+    });
+    panel.innerHTML=h;
+  } else if(state.activeTab==='helpers'){
+    let h=`<div class="section-label">Fishing helpers</div>`;
+    HELPERS.forEach(hp=>{
+      const afford=state.fish>=hp.cost;
+      h+=`<div class="shop-item${!afford&&hp.count===0?' locked':''}" onclick="buyHelper('${hp.id}')">
+        <div class="helper-icon-emoji">${hp.emoji}</div>
+        <div style="flex:1;min-width:0">
+          <div class="item-name">${hp.name}${hp.count>0?`<span class="count-badge">×${hp.count}</span>`:''}</div>
+          <div class="item-desc">${hp.desc} · +${hp.fps}/s</div>
+          <div class="item-cost">🐟 ${fmt(hp.cost)}</div>
+        </div></div>`;
+    });
+    panel.innerHTML=h;
+  } else {
+    const fps=getFPS();
+    panel.innerHTML=`<div class="section-label">Stats</div>
+      <div class="stat-row"><span class="stat-label">Fish collected</span><span class="stat-val">${fmt(state.totalFish)}</span></div>
+      <div class="stat-row"><span class="stat-label">Times clicked</span><span class="stat-val">${state.totalClicks}</span></div>
+      <div class="stat-row"><span class="stat-label">Fish / second</span><span class="stat-val">${fps.toFixed(1)}</span></div>
+      <div class="stat-row"><span class="stat-label">Penguins owned</span><span class="stat-val">${Object.keys(state.owned).length}/${PENGUINS.length}</span></div>
+      <div class="stat-row"><span class="stat-label">Total helpers</span><span class="stat-val">${HELPERS.reduce((s,h)=>s+h.count,0)}</span></div>
+      <div class="section-label" style="margin-top:14px">Your flock</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">${PENGUINS.filter(pg=>state.owned[pg.id]).map(pg=>`<div title="${pg.name}" style="opacity:${state.equippedId===pg.id?1:0.5}">${miniPenguinSVG(pg,36)}</div>`).join('')}</div>`;
+  }
+  const fp=getFPS();
+  document.getElementById('cps-label').textContent=fp>0?`+${fp.toFixed(1)} fish/sec from helpers`:'Click the penguin to earn fish!';
+  const cur=PENGUINS.find(x=>x.id===state.equippedId);
+  document.getElementById('current-label').textContent=cur.name+' penguin';
+}
+
+function switchTab(t){
+  state.activeTab=t;
+  document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('active',['shop','helpers','stats'][i]===t));
+  renderPanel();
+}
+function buyPenguin(id){
+  const p=PENGUINS.find(x=>x.id===id);
+  if(state.owned[id]||state.fish<p.cost)return;
+  state.fish-=p.cost;state.owned[id]=true;state.equippedId=id;
+  updateFishDisplay();renderPanel();
+}
+function equipPenguin(id){state.equippedId=id;renderPanel();}
+function buyHelper(id){
+  const h=HELPERS.find(x=>x.id===id);
+  if(state.fish<h.cost)return;
+  state.fish-=h.cost;h.count++;h.cost=Math.floor(h.cost*1.15);
+  updateFishDisplay();renderPanel();
+}
+
+const wrap=document.getElementById('penguin-wrap');
+const mainSvg=document.getElementById('main-svg');
+
+clickCanvas.addEventListener('click',function(e){
+  const r=clickCanvas.getBoundingClientRect();
+  const lx=Math.round((e.clientX-r.left)*(clickCanvas.width/r.width));
+  const ly=Math.round((e.clientY-r.top)*(clickCanvas.height/r.height));
+  if(!isOnPenguin(lx,ly))return;
+
+  state.fish+=1;state.totalFish+=1;state.totalClicks++;
+  updateFishDisplay();
+
+  const fx=document.createElement('div');
+  fx.className='click-fx';fx.textContent='+1 🐟';
+  fx.style.cssText=`left:${e.clientX-r.left-22}px;top:${e.clientY-r.top-14}px`;
+  wrap.appendChild(fx);setTimeout(()=>fx.remove(),860);
+
+  mainSvg.style.transform='scale(0.9)';
+  setTimeout(()=>mainSvg.style.transform='',120);
+});
+
+clickCanvas.addEventListener('mousemove',function(e){
+  const r=clickCanvas.getBoundingClientRect();
+  const lx=Math.round((e.clientX-r.left)*(clickCanvas.width/r.width));
+  const ly=Math.round((e.clientY-r.top)*(clickCanvas.height/r.height));
+  clickCanvas.style.cursor=isOnPenguin(lx,ly)?'pointer':'default';
+  mouseX=e.clientX;mouseY=e.clientY;
+});
+
+document.getElementById('game').addEventListener('mousemove',function(e){
+  mouseX=e.clientX;mouseY=e.clientY;
+});
+
+function getEyeOffset(){
+  const r=mainSvg.getBoundingClientRect();
+  const cx=r.left+r.width/2,cy=r.top+r.height*0.41;
+  const dx=mouseX-cx,dy=mouseY-cy;
+  const d=Math.sqrt(dx*dx+dy*dy)||1;
+  const s=Math.min(d/70,1)*4.5;
+  return{x:(dx/d)*s,y:(dy/d)*s};
+}
+
+let lastP=null;
+function loop(t){
+  const p=PENGUINS.find(x=>x.id===state.equippedId);
+  if(p!==lastP){buildHitMask(p);lastP=p;}
+  const{x,y}=getEyeOffset();
+  mainSvg.innerHTML=buildPenguinSVG(p,x,y);
+  drawBg(t);
+  requestAnimationFrame(loop);
+}
+
+setInterval(()=>{
+  const fps=getFPS();if(!fps)return;
+  state.fish+=fps/10;state.totalFish+=fps/10;
+  updateFishDisplay();
+},100);
+
+resizeBg();renderPanel();requestAnimationFrame(loop);
+</script>
