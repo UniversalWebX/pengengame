@@ -193,7 +193,8 @@ function buildpengenSVG(p,ex,ey){
   if(p.scarf==='rainbow')extra+=`<rect x="68" y="102" width="64" height="6" rx="2" fill="#D85A30"/><rect x="68" y="108" width="64" height="5" rx="2" fill="#EF9F27"/><rect x="68" y="113" width="64" height="5" rx="2" fill="#639922"/><rect x="68" y="118" width="64" height="5" rx="2" fill="#7F77DD"/>`;
   const ew=p.color==='#2C2C2A'?'#ddd':'#fff';
   const ep=p.eye==='#fff'?'#2C2C2A':'#042C53';
-  return `<ellipse cx="100" cy="176" rx="44" ry="10" fill="rgba(0,0,0,0.18)"/>
+  return `<g opacity="0">
+    <ellipse cx="100" cy="176" rx="44" ry="10" fill="rgba(0,0,0,0.18)"/>
     <ellipse cx="100" cy="112" rx="42" ry="58" fill="${p.color}"/>
     <ellipse cx="100" cy="122" rx="28" ry="38" fill="${p.belly}"/>
     ${extra}
@@ -208,7 +209,8 @@ function buildpengenSVG(p,ex,ey){
     <ellipse cx="62" cy="130" rx="12" ry="22" fill="${p.color}" transform="rotate(-15,62,130)"/>
     <ellipse cx="138" cy="130" rx="12" ry="22" fill="${p.color}" transform="rotate(15,138,130)"/>
     <ellipse cx="82" cy="168" rx="14" ry="8" fill="${p.beak}" transform="rotate(-10,82,168)"/>
-    <ellipse cx="118" cy="168" rx="14" ry="8" fill="${p.beak}" transform="rotate(10,118,168)"/>`;
+    <ellipse cx="118" cy="168" rx="14" ry="8" fill="${p.beak}" transform="rotate(10,118,168)"/>
+  </g>`;
 }
 
 function minipengenSVG(p,sz){
