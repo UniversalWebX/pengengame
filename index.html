@@ -90,7 +90,6 @@ const pengenS=[
   {id:'tuxedo',name:'Tuxedo',cost:5000,desc:'Fanciest bird alive',color:'#2C2C2A',belly:'#fff',beak:'#EF9F27',eye:'#042C53',hat:null,scarf:'bowtie'},
   {id:'rainbow',name:'Rainbow',cost:15000,desc:'Transcends all pengen form',color:'#7F77DD',belly:'#FBEAF0',beak:'#D85A30',eye:'#26215C',hat:'crown',scarf:'rainbow'},
 ];
-
 const HELPERS=[
   {id:'bucket',name:'Fish Bucket',cost:10,fps:0.5,desc:'Drips fish slowly',emoji:'🪣',count:0},
   {id:'igloo',name:'Igloo',cost:80,fps:2,desc:'pengens work inside',emoji:'🏠',count:0},
@@ -99,58 +98,17 @@ const HELPERS=[
   {id:'sub',name:'Submarine',cost:10000,fps:120,desc:'Deep-sea fish operations',emoji:'🚢',count:0},
 ];
 
-// --- SAVE SYSTEM LOCALSTORAGE FUNCTIONS ---
-const SAVE_KEY = 'pengen_clicker_savegame';
-
-function saveGame() {
-  const saveData = {
-    state: state,
-    // Store current escalated helper costs and helper counts
-    helpers: HELPERS.map(h => ({ id: h.id, cost: h.cost, count: h.count }))
-  };
-  localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
-}
-
-function loadGame() {
-  const rawData = localStorage.getItem(SAVE_KEY);
-  if (!rawData) return;
-  
-  try {
-    const saveData = JSON.parse(rawData);
-    
-    // Restore primary game progression variables
-    if (saveData.state) {
-      state = { ...state, ...saveData.state };
-    }
-    
-    // Restore custom helper counts and their scaling costs
-    if (saveData.helpers) {
-      saveData.helpers.forEach(savedHelper => {
-        const actualHelper = HELPERS.find(h => h.id === savedHelper.id);
-        if (actualHelper) {
-          actualHelper.count = savedHelper.count ?? 0;
-          actualHelper.cost = savedHelper.cost ?? actualHelper.cost;
-        }
-      });
-    }
-  } catch (e) {
-    console.error("Failed to load game save:", e);
-  }
-}
-
 let state={fish:0,totalFish:0,equippedId:'classic',owned:{classic:true},activeTab:'shop',totalClicks:0};
-
-// Run standard load validation right before setting up UI
-loadGame();
-
 let mouseX=300,mouseY=300;
+
 const bgCanvas=document.getElementById('bg-canvas');
 const bgCtx=bgCanvas.getContext('2d');
 let W=680,H=600;
+
 const clickCanvas=document.getElementById('click-canvas');
 const hitCtx=clickCanvas.getContext('2d');
 
-function resizeBg()){
+function resizeBg(){
   const r=document.getElementById('game').getBoundingClientRect();
   W=bgCanvas.width=r.width||680;H=bgCanvas.height=r.height||600;
 }
@@ -161,12 +119,12 @@ function buildHitMask(p){
   hitCtx.save();
   hitCtx.scale(scale,scale);
   hitCtx.fillStyle='#000';
-  hitCtx.beginPath();hitCtx.ellipse(100,112,42,58,0,0,Math.PI*2);hitCtx.fill();  
-  hitCtx.beginPath();hitCtx.ellipse(62,130,12,22,(-15*Math.PI)/180,0,Math.PI*2);hitCtx.fill();  
-  hitCtx.beginPath();hitCtx.ellipse(138,130,12,22,(15*Math.PI)/180,0,Math.PI*2);hitCtx.fill();  
-  hitCtx.beginPath();hitCtx.ellipse(82,168,14,8,(-10*Math.PI)/180,0,Math.PI*2);hitCtx.fill();  
-  hitCtx.beginPath();hitCtx.ellipse(118,168,14,8,(10*Math.PI)/180,0,Math.PI*2);hitCtx.fill();  
-  hitCtx.beginPath();hitCtx.ellipse(100,96,13,9,0,0,Math.PI*2);hitCtx.fill();  
+  hitCtx.beginPath();hitCtx.ellipse(100,112,42,58,0,0,Math.PI*2);hitCtx.fill();
+  hitCtx.beginPath();hitCtx.ellipse(62,130,12,22,(-15*Math.PI)/180,0,Math.PI*2);hitCtx.fill();
+  hitCtx.beginPath();hitCtx.ellipse(138,130,12,22,(15*Math.PI)/180,0,Math.PI*2);hitCtx.fill();
+  hitCtx.beginPath();hitCtx.ellipse(82,168,14,8,(-10*Math.PI)/180,0,Math.PI*2);hitCtx.fill();
+  hitCtx.beginPath();hitCtx.ellipse(118,168,14,8,(10*Math.PI)/180,0,Math.PI*2);hitCtx.fill();
+  hitCtx.beginPath();hitCtx.ellipse(100,96,13,9,0,0,Math.PI*2);hitCtx.fill();
   if(p.hat==='chef'||p.hat==='santa'||p.hat==='crown'||p.hat==='pirate'){
     hitCtx.beginPath();hitCtx.rect(66,10,68,50);hitCtx.fill();
   }
@@ -215,7 +173,8 @@ function drawHelpers(t){
   for(let i=0;i<ic;i++){const x=W*0.13+i*58,y=gy;bgCtx.fillStyle='#c0ddf0';bgCtx.beginPath();bgCtx.arc(x,y,26,Math.PI,0);bgCtx.fill();bgCtx.fillStyle='#a8ccde';bgCtx.fillRect(x-26,y-3,52,5);bgCtx.fillStyle='rgba(0,20,80,0.35)';bgCtx.beginPath();bgCtx.arc(x,y,11,Math.PI,0);bgCtx.fill();bgCtx.strokeStyle='rgba(80,140,200,0.35)';bgCtx.lineWidth=1;for(let row=0;row<3;row++){for(let col=0;col<4-row;col++){bgCtx.beginPath();bgCtx.moveTo(x-20+col*13+row*6.5,y-7-row*9);bgCtx.lineTo(x-9+col*13+row*6.5,y-7-row*9);bgCtx.stroke();}}}
   for(let i=0;i<bo;i++){const bx=W*0.22+i*95,by=H*0.66+Math.sin(t*0.0018+i*1.4)*5;bgCtx.fillStyle='#c0392b';bgCtx.beginPath();bgCtx.moveTo(bx-24,by+6);bgCtx.lineTo(bx+24,by+6);bgCtx.lineTo(bx+17,by+18);bgCtx.lineTo(bx-17,by+18);bgCtx.closePath();bgCtx.fill();bgCtx.fillStyle='#e8e8e0';bgCtx.fillRect(bx-10,by-4,20,10);bgCtx.fillStyle='#fff';bgCtx.fillRect(bx-1.5,by-18,3,22);bgCtx.fillStyle='rgba(255,255,255,0.9)';bgCtx.beginPath();bgCtx.moveTo(bx,by-18);bgCtx.lineTo(bx+20,by-6);bgCtx.lineTo(bx,by+2);bgCtx.closePath();bgCtx.fill();bgCtx.strokeStyle='rgba(100,160,220,0.4)';bgCtx.lineWidth=1.5;for(let ww=0;ww<3;ww++){bgCtx.beginPath();bgCtx.arc(bx-38+ww*20,by+10,6+ww*2,0.2,-0.2,true);bgCtx.stroke();}}
   for(let i=0;i<fa;i++){const x=W*0.58+i*88,y=gy;bgCtx.fillStyle='#3a3a38';bgCtx.fillRect(x-22,y-55,44,57);bgCtx.fillStyle='#555553';bgCtx.fillRect(x-8,y-55,18,10);bgCtx.fillStyle='#4a4a48';bgCtx.fillRect(x-18,y-62,15,10);bgCtx.fillRect(x+2,y-68,14,16);bgCtx.fillStyle='#D85A30';bgCtx.fillRect(x-12,y-40,24,8);bgCtx.fillStyle='rgba(180,180,180,0.25)';bgCtx.beginPath();bgCtx.ellipse(x-10,y-64,4,9,0,0,Math.PI*2);bgCtx.fill();bgCtx.beginPath();bgCtx.ellipse(x+9,y-70,3.5,8,0,0,Math.PI*2);bgCtx.fill();bgCtx.fillStyle='rgba(240,100,60,0.15)';bgCtx.beginPath();bgCtx.ellipse(x-10,y-74,6,6,0,0,Math.PI*2);bgCtx.fill();bgCtx.beginPath();bgCtx.ellipse(x+9,y-79,5,5,0,0,Math.PI*2);bgCtx.fill();for(let w=0;w<3;w++){bgCtx.fillStyle='rgba(255,200,80,0.45)';bgCtx.fillRect(x-14+w*13,y-30,8,10);}}
-  for(let i=0;i<su;i++){const sx=W*0.08+i*180+Math.sin(t*0.001+i*1.8)*18,sy=H*0.715+i*6;bgCtx.fillStyle='#2d2580';bgCtx.beginPath();bgCtx.ellipse(sx,sy,42,15,0,0,Math.PI*2);bgCtx.fill();bgCtx.fillStyle='#3c3490';bgCtx.fillRect(sx-8,sy-26,16,13);bgCtx.fillRect(sx-12,sy-29,24,5);bgCtx.fillStyle='rgba(100,180,255,0.55)';bgCtx.beginPath();bgCtx.arc(sx+12,sy-4,6,0,Math.PI*2);bgCtx.fill();bgCtx.fillStyle='rgba(180,220,255,0.4)';bgCtx.beginPath();bgCtx.arc(sx+12,sy-4,2.5,0,Math.PI*2);bgCtx.fill();bgCtx.strokeStyle='rgba(120,200,255,0.35)';bgCtx.lineWidth=2;bgCtx.lineCap='round';for(let w=1;w<=3;w++){bgCtx.beginPath();bgCtx.arc(sx-48-w*8,sy,w*5,0.35,-0.35,true);bgCtx.stroke();}}}
+  for(let i=0;i<su;i++){const sx=W*0.08+i*180+Math.sin(t*0.001+i*1.8)*18,sy=H*0.715+i*6;bgCtx.fillStyle='#2d2580';bgCtx.beginPath();bgCtx.ellipse(sx,sy,42,15,0,0,Math.PI*2);bgCtx.fill();bgCtx.fillStyle='#3c3490';bgCtx.fillRect(sx-8,sy-26,16,13);bgCtx.fillRect(sx-12,sy-29,24,5);bgCtx.fillStyle='rgba(100,180,255,0.55)';bgCtx.beginPath();bgCtx.arc(sx+12,sy-4,6,0,Math.PI*2);bgCtx.fill();bgCtx.fillStyle='rgba(180,220,255,0.4)';bgCtx.beginPath();bgCtx.arc(sx+12,sy-4,2.5,0,Math.PI*2);bgCtx.fill();bgCtx.strokeStyle='rgba(120,200,255,0.35)';bgCtx.lineWidth=2;bgCtx.lineCap='round';for(let w=1;w<=3;w++){bgCtx.beginPath();bgCtx.arc(sx-48-w*8,sy,w*5,0.35,-0.35,true);bgCtx.stroke();}}
+}
 
 function getFPS(){return HELPERS.reduce((s,h)=>s+h.fps*h.count,0);}
 function fmt(n){if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1e3)return(n/1e3).toFixed(1)+'K';return Math.floor(n).toString();}
@@ -314,27 +273,18 @@ function switchTab(t){
   document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('active',['shop','helpers','stats'][i]===t));
   renderPanel();
 }
-
 function buypengen(id){
   const p=pengenS.find(x=>x.id===id);
   if(state.owned[id]||state.fish<p.cost)return;
   state.fish-=p.cost;state.owned[id]=true;state.equippedId=id;
   updateFishDisplay();renderPanel();
-  saveGame();
 }
-
-function equippengen(id){
-  state.equippedId=id;
-  renderPanel();
-  saveGame();
-}
-
+function equippengen(id){state.equippedId=id;renderPanel();}
 function buyHelper(id){
   const h=HELPERS.find(x=>x.id===id);
   if(state.fish<h.cost)return;
   state.fish-=h.cost;h.count++;h.cost=Math.floor(h.cost*1.15);
   updateFishDisplay();renderPanel();
-  saveGame();
 }
 
 const wrap=document.getElementById('pengen-wrap');
@@ -345,12 +295,15 @@ clickCanvas.addEventListener('click',function(e){
   const lx=Math.round((e.clientX-r.left)*(clickCanvas.width/r.width));
   const ly=Math.round((e.clientY-r.top)*(clickCanvas.height/r.height));
   if(!isOnpengen(lx,ly))return;
+
   state.fish+=1;state.totalFish+=1;state.totalClicks++;
   updateFishDisplay();
+
   const fx=document.createElement('div');
   fx.className='click-fx';fx.textContent='+1 🐟';
   fx.style.cssText=`left:${e.clientX-r.left-22}px;top:${e.clientY-r.top-14}px`;
   wrap.appendChild(fx);setTimeout(()=>fx.remove(),860);
+
   mainSvg.style.transform='scale(0.9)';
   setTimeout(()=>mainSvg.style.transform='',120);
 });
@@ -386,22 +339,11 @@ function loop(t){
   requestAnimationFrame(loop);
 }
 
-// Background progression tick running every 100ms
 setInterval(()=>{
   const fps=getFPS();if(!fps)return;
   state.fish+=fps/10;state.totalFish+=fps/10;
   updateFishDisplay();
 },100);
 
-// Auto-save loop checking in every 4 seconds
-setInterval(saveGame, 4000);
-
-// Emergency safeguard to commit changes if tab is swiped or closed unexpectedly
-window.addEventListener('beforeunload', saveGame);
-window.addEventListener('pagehide', saveGame);
-
-resizeBg();
-renderPanel();
-updateFishDisplay();
-requestAnimationFrame(loop);
+resizeBg();renderPanel();requestAnimationFrame(loop);
 </script>
